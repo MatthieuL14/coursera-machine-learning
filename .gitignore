@@ -3,3 +3,4 @@ latex/*.aux
 latex/*.log
 latex/*.synctex.gz
 slides/
+python-venv/

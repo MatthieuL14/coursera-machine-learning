@@ -215,4 +215,79 @@ y =
 \end{cases}
 \end{equation}
 
+Finally, the vectorized form of the hypothesis can be written as follows:
+
+\begin{align*}
+& h_{\theta}(X) = g\left(X\theta\right) \in \left]0, 1\right[^{m} \\
+& \text{where g is the sigmoid function applied element-wise}
+\end{align*}
+
+\subsection{Cost function}
+
+Before introducing the cost function, let study two functions:
+
+\begin{align*}
+& v \; : \; x \in \left] 0, 1 \right[ \longrightarrow  -ln(x) \in \left[0, +\infty\right[ \\
+& \\
+& w \; : \; x \in \left] 0, 1 \right[ \longrightarrow  -ln(1-x) \in \left[0, +\infty\right[ \\
+\end{align*}
+
+Function $v$ has the following properties on the interval $\left] 0, 1 \right[$ :
+
+\begin{itemize}
+\item It is decreasing.
+\item It converges to $+\infty$ in 0.
+\item $v(1)=0$.
+\end{itemize}
+
+Function $w$ has the following properties on the interval $\left] 0, 1 \right[$ :
+
+\begin{itemize}
+\item It is increasing.
+\item It converges to $+\infty$ in 1.
+\item $w(0)=0$.
+\end{itemize}
+
+Here is the graph of $v$ and $w$ on the interval $\left] 0, 1 \right[$ :
+
+\begin{center}
+  \includegraphics[scale=0.7]{vw}
+  \captionof{figure}{Graph of $v$ and $w$}
+  \label{fig:vw}
+\end{center}
+
+Now we introduce the following cost function:
+
+\begin{align*}
+& J(\theta) = \frac{1}{m} * \sum_{i=1}^{m} Cost\left(h_{\theta}\left(x^{(i)}\right), y^{(i)}\right) \in \mathbb{R} \\
+& \text{where} \\
+& Cost\left(h_{\theta}\left(x^{(i)}\right), y^{(i)}\right)  =
+\begin{cases}
+-ln\left(h_{\theta}\left(x^{(i)}\right)\right) & \text{ if } y^{(i)}=1 \\
+-ln\left(1-h_{\theta}\left(x^{(i)}\right)\right) & \text{ if } y^{(i)}=0
+\end{cases}
+\end{align*}
+
+Given that $y \in \{0, 1\}$, the cost function can be rewritten as:
+
+\begin{equation}
+J(\theta) = \frac{1}{m} * \sum_{i=1}^{m} \left[  \left(y^{(i)} * -ln\left(h_{\theta}\left(x^{(i)}\right)\right)\right) + \left( (1-y^{(i)}) * -ln\left(1-h_{\theta}\left(x^{(i)}\right)\right)  \right) \right] \in \mathbb{R}
+\end{equation}
+
+We can also write the vectorized form of the cost function as follows:
+
+\begin{align*}
+& J(\theta) = -\frac{1}{m} * \left[y^{\top} ln(h_{\theta}(X)) + (1-y)^{\top}ln(1-h_{\theta}(X)) \right] \in \mathbb{R} \\
+& \\
+& \text{where } ln \text{ is applied element-wise} 
+\end{align*}
+
+\subsection{Gradient descent}
+
+The unvectorized form of the gradient of the cost function can be written as:
+
+\begin{equation}
+\frac{\partial J(\theta)}{\partial \theta_{j}} = 
+\end{equation}
+
 \end{document}
