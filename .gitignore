@@ -2,4 +2,4 @@ exercises/python/venv/
 latex/*.aux
 latex/*.log
 latex/*.synctex.gz
-
+slides/
