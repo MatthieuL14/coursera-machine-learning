@@ -4,3 +4,4 @@ latex/*.log
 latex/*.synctex.gz
 slides/
 python-venv/
+exercises/octave/

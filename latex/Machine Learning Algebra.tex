@@ -375,9 +375,9 @@ The hypothesis can be written recursively as follows:
 \begin{align*}
 & X_1 = \text{the data matrix} \in \mathbb{R}^{m * (s_1+1)} \\
 & \\
-& X_{l+1} = 1_{(s_{l+1})*1} \: \| \: g(\Theta^{(l)}X_{l}^{\top})  \in \mathbb{R}^{m * \left((s_{l+1})+1)\right)} \\
+& X_{l+1} = 1_{m*1} \: \| \: g(X_{l}{\Theta^{(l)}}^{\top})  \in \mathbb{R}^{m * \left((s_{l+1})+1)\right)} \\
 & \\
-& h_{\Theta}(X_{1}) = g(\Theta^{(L-1)}X_{L-1}^{\top})  \in \mathbb{R}^{m * s_{L}} \\
+& h_{\Theta}(X_{1}) = g(X_{L-1}{\Theta^{(L-1)}}^{\top})  \in \mathbb{R}^{m * s_{L}} \\
 & \\
 & \text{where } \| \text{ means horizontal concatenation and } g \text{ is the sigmoid function applied element-wise}.
 \end{align*}
@@ -395,20 +395,56 @@ Very similar to the cost function for the logistic regression, we just add a cos
 \begin{equation}
 \begin{split}
 J(\Theta) = -\frac{1}{m} * \sum_{i=1}^{m} \sum_{k=1}^{K} y_{k}^{(i)} * ln({h_{\Theta}(X_{1})}_{i,k}) + (1-y_{k}^{(i)}) * ln(1-{h_{\Theta}(X_{1})}_{i,k}) \\
-+ \frac{\lambda}{2m} * \sum_{l=1}^{L-1} \sum_{i=1}^{i=s_{(l+1)}} \sum_{j=2}^{(s_{l})+1} {\Theta^{(l)}_{i,j}}^{2}
++ \frac{\lambda}{2m} * \sum_{l=1}^{L-1} \sum_{i=1}^{s_{(l+1)}} \sum_{j=2}^{(s_{l})+1} {\Theta^{(l)}_{i,j}}^{2}
 \end{split}
 \end{equation}
 
 It can be vectorized as follows:
 
 \begin{align*}
-& J(\Theta) = -\frac{1}{m}  * \left[ Tr \left(ln(h_{\Theta}(X_{1}))Y^{\top}\right) + Tr\left(ln(1-h_{\Theta}(X_{1})(1-Y)^{\top}) \right) \right] \\
-& + \frac{\lambda}{2m}*\sum_{l=1}^{L-1}{\Theta_{r}^{(l)}}^{\top}\Theta_{r}^{(l)} \\
+& J(\Theta) = -\frac{1}{m}  * \left[ \; Tr \left(ln(h_{\Theta}(X_{1}))Y^{\top}\right) + Tr\left(ln(1-h_{\Theta}(X_{1}))(1-Y)^{\top} \right) \; \right] \\
+& + \frac{\lambda}{2m}*\sum_{l=1}^{L-1}Tr\left({\Theta_{r}^{(l)}}^{\top}\Theta_{r}^{(l)}\right) \\
 & \text{where } \Theta_{r}^{(l)} = \Theta^{(l)} \text{ without the first column of }\theta_0s, \\
 & \text{and }  h_{\Theta}(X_{1}) \in \mathbb{R}^{m*K} \text{ and } Y \in \mathbb{R}^{m*K}, \\
 & \text{and } Tr(.) \text{ is the trace of a square matrix operator i.e. the sum of its diagonal}, \\
 & \text{ln(.) is applied element-wise}. 
 \end{align*}
+
+\subsection{Backpropagation algorithm}
+
+In order to minimize the cost function, we need to compute the partial derivatives of $J(\Theta)$ with respect to all the parameters i.e. with respect to each element of the $(L-1)$ matrices of parameters:
+
+\begin{equation}
+\frac{\partial J(\Theta)}{\partial \Theta_{i, j}^{(l)}} \text{ for } i, \: j, \: l
+\end{equation}
+
+To do so, we can use the backpropagation algorithm. This algorithm will yields the partial derivatives of $J(\Theta)$ with respect to each element of the matrices of parameters. 
+
+\begin{itemize}
+\item Step 1: Initialization. Set the matrices of parameters to random small values.
+\item Step 2: Compute forward the activation of the units of each intermediate layer as well as the hypothesis i.e. the output units with matrices of zeroes.
+\item Step 3: Compute the error of the last layer.
+\item Step 4: Compute backward the errors of all previous layers until the first intermediate layer.
+\item Step 5: Use the errors of each layer to compute the gradients of each matrix of parameters.
+\end{itemize}
+
+
+On the full sample, the errors can be computed as follows:
+
+\begin{align*}
+& \delta^{(L)} = A^{(L)} - Y^{(L)} \in \mathbb{R}^{m\times s_{L}} \\
+& \delta^{(l)} =  \delta^{(l+1)} \Theta^{(l)} \: .* A^{(l)} .* (1-A^{(l)}) \in \mathbb{R}^{m\times (s_{l}+1)} \\
+& \text{where } A^{(l)} = 1_{m*1} \: \| \: g(\Theta^{(l-1)}X_{l-1}^{\top}) 
+\end{align*}
+
+Finally, we can obtain the gradients as follows:
+
+\begin{align*}
+& \Delta^{(l)} = \frac{1}{m} * {\delta^{(l+1)}}^{\top}A^{(l)}  + \frac{\lambda}{m} * \Theta_{r}^{(l)} \\
+& \text{where } \Theta_{r}^{(l)} = \begin{pmatrix} 0 \\ 0 \\ ... \\ 0 \end{pmatrix} \: \| \: \left[\Theta^{(l)}\right]_{col 2-end}
+\end{align*}
+
+Note that for $l=1$, we have $A^{1}=X$.
 
 
 \end{document}
