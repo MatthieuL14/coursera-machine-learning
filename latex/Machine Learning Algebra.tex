@@ -313,7 +313,7 @@ Denoting $\alpha$ the learning rate, a vectorized implementation of the gradient
 The regularized cost function can be written as:
 
 \begin{align*}
-& J(\theta) = -\frac{1}{m} * \left[y^{\top} ln(h_{\theta}(X)) + (1-y)^{\top}ln(1-h_{\theta}(X)) \right] + \frac{\lambda}{2m} * \sum_{j=1}^{n} \theta_{j}^{2} \in \mathbb{R} \\
+& J(\theta) = -\frac{1}{m} * \left[y^{\top} ln(h_{\theta}(X)) + (1-y)^{\top}ln(1-h_{\theta}(X)) \right] +\frac{\lambda}{2m}*\theta_{r}^{\top}\theta_{r}  \in \mathbb{R} \\
 & \\
 & \text{where } ln \text{ is applied element-wise} 
 \end{align*}
@@ -445,6 +445,83 @@ Finally, we can obtain the gradients as follows:
 \end{align*}
 
 Note that for $l=1$, we have $A^{1}=X$.
+
+\section{Support Vector Machines}
+
+\subsection{Hypothesis}
+
+Support Vector Machines or SVM is another classifier.  The hypothesis is a discriminant function based on the value of the linear combination:
+
+\begin{align*}
+& h_{\theta}(x^{(i)}) = 
+\begin{cases}
+1 & \text{if } \theta^{\top}x^{(i)} >= 0 \\
+0 & \text{otherwise} 
+\end{cases}
+& \\
+& \text{where } x^{(i)} \in \mathbb{R}^{(n+1)} \text{ and } \theta \in \mathbb{R}^{(n+1)}
+\end{align*}
+
+\subsection{Cost function}
+
+The cost function is inspired by the cost function of the logistic regression but is slightly different:
+
+\begin{equation}
+J(\theta) = C * \left[ \sum_{i=1}^{m} y^{(i)} * cost_1(\theta^{\top}x^{(i)}) + (1-y^{(i)})*cost_0(\theta^{\top}x^{(i)}) \right] + \frac{1}{2} \sum_{j=1}^{n} \theta_{j}^{2}
+\end{equation}
+
+Compared to the cost function of the logistic regression:
+
+\begin{itemize}
+\item We have dropped the $\frac{1}{m}$ factors
+\item We have replaced the parameter $\lambda$ by a parameter $C = \frac{1}{\lambda}$. The bigger C, the more we want to fit exactly the data. The lower C, the more we want the parameters to be small.
+\item The individual cost function assigning a cost to the prediction is the Hinge loss function.
+\end{itemize}
+
+It can be written in a vectorized form as follows:
+
+\begin{align*}
+& J(\theta) = C * \left[ (Y^{\top}cost_1(X\theta)) + ({(1-Y)}^{\top}cost_0(X\theta)) \right] + \frac{1}{2}*\theta_{r}^{\top}\theta_{r} \in \mathbb{R} \\
+& \text{where } \theta_{r} \text{ is equal to } \theta \text{ without } \theta_0 \text{ thus } \in \mathbb{R}^{n} \\
+& cost_0(.) \text{ and } cost_1(.) \text{are applied element-wise}.
+\end{align*}
+
+\subsection{Hinge loss functions}
+
+For $y^{(i)}=1$, the hinge loss function is:
+
+\begin{equation}
+cost_1(z) = 
+\begin{cases}
+0 & \text{ if } z >= 1 \\
+k(1-z) &  \text{ if } z<1
+\end{cases}
+\text{with k an arbitrary slope parameter } >0
+\end{equation}
+
+For $y^{(i)}=0$, the hinge loss function is:
+
+\begin{equation}
+cost_0(z) = 
+\begin{cases}
+0 & \text{ if } z < -1 \\
+k(1+z) &  \text{ if } z>=-1
+\end{cases}
+\text{with k an arbitrary slope parameter } >0
+\end{equation}
+
+Here is a graph of $cost_0$ and $cost_1$ on $[-2,2]$ with $k=2$:
+
+\begin{center}
+  \includegraphics[scale=0.7]{hinge}
+  \captionof{figure}{Graph of $cost_0$ and $cost_1$ with $k=2$}
+  \label{fig:hinge}
+\end{center}
+
+
+\subsection{Large margin intuition}
+ 
+When ...
 
 
 \end{document}
