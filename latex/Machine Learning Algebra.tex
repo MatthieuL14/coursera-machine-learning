@@ -377,15 +377,19 @@ $b^{[l]} \in \mathbb{R}^{n_h^{[l]}}$
 
 There is one weight for each activation unit of layer $l$.
 
-\subsection{Hypothesis}
+\subsection{Forward propagation}
 
-The hypothesis can be computed recursively as follows:
+Given the data matrix $X$ and weights $W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]}$ that have been initialized randomly, we can compute the hypothesis i.e. the matrix $\hat{Y}$ giving the probability that each training example $x^{(i)}$ belongs to each class.
 
 \begin{align*}
-& A^{[1]} = g^{[1]}\left( W^{[1]} * X + b^{[1]} \right) \in n_h^{[l]} \times m \\
+& X = A^{[0]} \in n_x \times m  \\
+& \text{For } l \in [1, ..., L] \\
+&  Z^{[l]} = W^{[l]}A^{[l]} + b^{[l]} \in n_h^{[l]} \times m \\
+&  A^{[l]} = g^{[l]} \left(Z^{[l]}\right) \\
 & \text{where } g^{[l]}(.) \text{ denotes the activation function for layer } l \text{ applied element-wise} \\
 & \text{and where } b^{[1]}  \text{ is broadcasted to be } n_h^{[l]} \times m \\
-& \hat{Y} = A^{[L]} = g^{[L]}\left( W^{[L]} * A^{[L-1]} + b^{[L-1]} \right) \in n_y \times m \\
+& \text{and finally } \\
+& \hat{Y} = A^{[L]} \in n_y \times m
 \end{align*}
 
 Again, the hypothesis only gives the probability that an observation belongs to each class. As for the one vs. all multi-class classification problem, we then introduce the following decision rule to pick the most probable class given the input features:
@@ -428,7 +432,7 @@ In practice, here are some tips and notes:
 
 \subsection{Cost function}
 
-Very similar to the cost function for the logistic regression, we just add a cost for the estimation of the probability of each of the K class for each example. We can first write it in a non-vectorized way: 
+The cost function depends of the problem faced. For a simple binary classification problem or a multi-label classification problem, we can use the cost function we used for logistic regression, we just add a cost for the estimation of the probability of each of the K class for each example. We can first write it in a non-vectorized way: 
 
 \begin{align*}
 \begin{split}
@@ -445,38 +449,69 @@ J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]}) = -\frac{1}{m} * \sum_{i=1}^{m} \sum_
 
 It can be vectorized as follows:
 
-\begin{equation}
+\begin{align*}
 \begin{split}
-J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]})  = -\frac{1}{m} * np.sum \left[ Y .* ln(A^{[2]}) + (1-Y) .* ln(1 - A^{[2]}) \right] \\
-+ \frac{\lambda}{2m} * np.sum \left( \sum_{l=1}^{L} W^{[l]} .* W^{[l]} \right)
+J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]})  = -\frac{1}{m} * np.sum \left[ Y \textbf{ .* }  ln(A^{[2]}) + (1-Y) \textbf{ .* }  ln(1 - A^{[2]}) \right] \\
++ \frac{\lambda}{2m} * np.sum \left( \sum_{l=1}^{L} W^{[l]} \textbf{ .* }  W^{[l]} \right)
 \end{split}
-\end{equation}
+& \\
+& \text{where } \textbf{.*} \text{ is an element-wise multiplication.}
+\end{align*}
+
+For a multiclass classification problem (where each example is predicted to belong to only one class among K), the cost function can be written as:
+
+\begin{align*}
+& -\frac{1}{m} np.sum \left[ Y \textbf{ .* } ln(A^{[L]}) \right]
+\end{align*}
 
 \subsection{Backpropagation algorithm}
 
 In order to minimize the cost function, we need to compute the partial derivatives of $J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]})$ with respect to all the parameters i.e. with respect to each element of the $L$ matrices of weights and to each element of the $L$ vectors of bias:
 
-\begin{equation}
-\forall l, \; \frac{\partial J}{\partial W^{[l]}} \text{ and } \frac{\partial J}{\partial b^{[l]}}
-\end{equation}
-
 To do so, we can use the backpropagation algorithm. It basically applies the chain rule to go back the computational graph of $A^{[L]}$.
+
+\begin{align*}
+& \text{ Starting from the last layer } \\
+& \frac{\partial J}{\partial Z^{[L]}} = \frac{\partial J}{\partial \hat{Y}} * \frac{\partial \hat{Y}}{\partial Z^{[L]}} \in n_h^L \times m \\
+& \frac{\partial J}{\partial W^{[L]}} = \frac{\partial J}{\partial Z^{[L]}} * {A^{[L-1]}}^{t} \in n_h^L \times n_h^{(L-1)} \\
+& \frac{\partial J}{\partial b^{[L]}} = \frac{\partial J}{\partial Z^{[L]}} * 1_{m\times1} \in n_h^L \times 1 \\
+& \text{For l in [L-1 ... 1]:} \\
+& \frac{\partial J}{\partial Z^{[l]}} = \frac{\partial J}{\partial A^{[l]}} * \frac{\partial A^{[l]}}{\partial Z^{[l]}} \\
+& \text{ where } \frac{\partial J}{\partial A^{[l]}} = {W^{[l+1]}}^{t} \frac{\partial J}{\partial Z^{[l+1]}} \\
+& \text{ and where } \frac{\partial A^{[l]}}{\partial Z^{[l]}} \text{ depends on } g^{[l]}(.) \\
+& \frac{\partial J}{\partial W^{[l]}} = \frac{\partial J}{\partial Z^{[l]}} * {A^{[l-1]}}^{t} \in n_h^{l} \times n_h^{(l-1)} \\
+& \frac{\partial J}{\partial b^{[l]}} = \frac{\partial J}{\partial Z^{[l]}} * 1_{m\times1} \in n_h^l \times 1 \\
+\end{align*}
 
 \subsection{Synthesis}
 
-Here is a summary of the steps to implement a neural network.
+Here is a summary of the steps to implement a neural network. First, we need to choose initial values for our hyperparameters. These hyperparameters will influence the optimal value found for the parameters of the neural network. By iterating, we will then adjust the hyperparameters.
 
 \begin{itemize}
 \item Choose the number of hidden layers $[L-1]$ ;
 \item Choose the number of hidden units $n^{[l]}_h$ in each hidden layer ;
 \item Choose the activation functions $g^{[l]}$ at each layer: use the sigmoid function for the output layer if it is a binary classification problem. Otherwise, use the RELU function everywhere. If it is a regression problem, you can use an identity activation function at the output layer ;
+\item Choose the regularization parameter $\lambda$ ;
+\item Choose the learning rate $\alpha$ ;
+\item Choose the number of iterations $N$ for gradient descent.
+\end{itemize}
+
+Once this is done, here is the learning process:
+
+\begin{itemize}
 \item Randomly initialize the parameters $W^{[l]}$ between small negative and small positive values such as $0.001 * -2$ and $0.001 * 2$ to break up symmetry. It is useful to have small initial weights if the derivatives of the activation functions are locally small for large values of their input (it is the case for tanh, not for RELU).
 \item You can initialize the bias vectors $b^{[l]}$ at zeros vectors because symmetry is already broken by the random initialization of the matrices of weights ;
-\item Choose the learning rate $\alpha$ ;
 \item Repeat $N$ times the following steps: (1) forward propagation to compute each activate unit $A^{[l]}$ as well as the local value of the cost function $J$; (2) backward propagation to compute the derivatives of $J$ ; (3) update the parameters subtracting $\alpha$ times the derivative ; (4) restart.
 \item Plot the evolution of $J$ every $N_{i}$ iterations for instance every $1 000$ iterations to check $J$ converged.
 \end{itemize}
 
+\subsection{Deep Neural Network}
+
+The depth of a neural network refers to the number of \textbf{layers} of the network. A logistic regression is said to be a very \textbf{shallow} neural network because it consists of only 1 layer. A 2-layer NN is also a quite shallow neural network. On the contrary, a 5-layer NN is said to be a \textbf{deep} neural network.
+
+When facing a deep neural network processing unstructured data like images or sounds, one can think that the first layers of the NN are trying to detect or identify simple stuffs like phonems or edges while the deepest layers of the NN are trying to compose simple things to detect complex objects like faces or words. 
+
+Finally, one result from circuit theory shows that it is more efficient to have a deep neural network with a low number of hidden units than a shallow neural network. Indeed, by constraining the number of layers, one may need to have an exponential number of hidden units in each remaining layer to model the same function of the input. It is especially true for logical functions such that XOR. 
 
 \section{Support Vector Machines}
 
