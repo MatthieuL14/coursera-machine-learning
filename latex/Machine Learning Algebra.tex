@@ -2,13 +2,17 @@
 
 \renewcommand{\familydefault}{\sfdefault}
 
-\usepackage[english]{babel}
+\usepackage[french, english]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{parskip}
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
 \usepackage{capt-of}
+\usepackage{makecell}
+
+\setlength{\arrayrulewidth}{0.3mm}
+\setlength{\tabcolsep}{18pt}
 
 \begin{document}
 \title{\Large{\textbf{Machine Learning Algebra}}}
@@ -336,115 +340,143 @@ Let consider the following neural network:
   \label{fig:neural}
 \end{center}
 
-We assume that we face a multi-class classification where we want to predict whether an observation belongs to one of $K$ possible classes. We denote $L$ the total number of layers in the network. In the example, there are 4 layers. The first layer is called the input layer. The last layer is called the output layer. Intermediate layers are called hidden layers. Here, there are 2 hidden layers. We denote $s_{l}$ the number of units in layer $l$, not counting the bias unit. In the example, we thus have:
+We assume that we face a multi-class classification where we want to predict whether an observation belongs to one of $K$ possible classes. We denote $L$ the total number of layers in the network.
+
+By convention, the input layer is not counted as a true layer. So in this example, we are facing a 3-layer neural network. The first layer is called the input layer and is not counted in the total, it is indexed as layer 0. The last layer is called the output layer, it is indexed as layer 3 in this example.
+
+Intermediate layers are called hidden layers. Here, there are 2 hidden layers. We denote $n_{h}^{[l]}$ the number of units in layer $l$, not counting the bias unit. In the example, we thus have:
 
 \begin{itemize}
-\item $s_{1} = 3$ which is $n$, the number of input features.
-\item $s_{2} = 5$.
-\item $s_{3} = 5$.
-\item $s_{4} = 4$ which is $K$, the number of classes.
+\item $n_{h}^{[0]} = 3$ which is $n_x$, the number of input features.
+\item $n_{h}^{[1]} = 5$.
+\item $n_{h}^{[2]} = 5$.
+\item $n_{h}^{[3]} = 4$ which is $K$ or $n_y$ or $n_{h}^{[L]}$, the number of classes.
 \end{itemize}
 
-We assume that a bias unit is added as an input to any layer.
+We assume that a bias unit is added as an input to any layer. We denote $m$ the total number of examples in our training set.
 
-We denote $m$ the total number of examples in our training set. We denote $x^{(i)} \in \mathbb{R}^{\left(s_{1} + 1 \right)}$ the vector of features of the $i-th$ example in the training set where $x_0^{(i)} = 1$. We denote $y^{(i)} \in \mathbb{R}^{K=s_{L}}$ the output vector of the $i-th$ example in the training set. If the $i-th$ example belongs to class $k$, then:
+We are going to change a bit our notations for solving neural networks as it will be more convenient. The data matrix $X$ is gonna be transposed i.e. we are going to stack horizontally each training example.
 
-\begin{equation}
-y^{(i)} = \begin{pmatrix} 0 \\ ... \\ 0 \\ 1 \\0 \\ ... \\ 0 \end{pmatrix} \text{where } {\left(y^{(i)} \right)}_{k, 1} = 1 \in \mathbb{R}^{K=s_{L}} 
-\end{equation}
+$X = \begin{pmatrix} x^{(1)} & x^{(2)} & ... & x^{(m)} \end{pmatrix} \in \mathbb{R}^{n_{x}\times m}$
 
-Note that the full output values can be stored in a matrix:
+We are doing the same for the output label matrix:
 
-\begin{equation}
-Y =  \begin{pmatrix} {y^{(1)}}^{\top} \\ ... \\ {y^{(m)}}^{\top} \end{pmatrix} \in \mathbb{R}^{m*K}
-\end{equation}
+$Y = \begin{pmatrix} y^{(1)} & y^{(2)} & ... & y^{(m)} \end{pmatrix} \in \mathbb{R}^{n_{y}\times m}$
 
+Both for $X$ and $Y$, the number of rows is equal to the number of features (resp. classes) and the number of columns is equal to the number of training examples. One column corresponds to one training example. 
 
-Finally, we denote $\Theta^{(l)}$ the matrix of parameters required to go from layer $l$ to layer $(l+1)$. This matrix is in the space $\mathbb{R}^{s_{(l+1)} * \left((s_{l}) + 1\right)}$ since it maps vectors of dimension $((s_{l}) + 1)$ (do not forget the bias unit) into vectors of dimension $s_{(l+1)}$. Note that:
+Finally, we denote $W^{[l]}$ the weight matrix required to go from layer $(l-1)$ to layer $l$. This matrix is in the space $\mathbb{R}^{n_h^{[l]} \times n_h^{[l-1]}}$ since it maps vectors of dimension $n_h^{[l-1]}$  into vectors of dimension $n_h^{[l]}$. The number of rows correspond to the number of units in the next layer while the number of columns correspond to the number of units in the previous layer!
 
-\begin{equation}
- \Theta^{(l)} =  \begin{pmatrix}  \text{Parameters associated to unit 1 of layer } (l+1) \\ ... \\ \text{Parameters associated to unit } s_{l+1} \text{of layer } (l+1) \end{pmatrix} \in \mathbb{R}^{s_{(l+1)} * \left((s_{l}) + 1\right)}
-\end{equation}
+Note that in this example, there are 3 matrices of parameters to estimate : $W^{[1]}$, $W^{[2]}$ and $W^{[3]}$. It requires to estimate $5*3 + 5*5 + 4*5 = 15 + 25 + 20 = 60$ weights, without counting the weights associated to the biais units. 
 
-In other words, ${\left(\Theta^{l}\right)}_{i, j}$ corresponds to the parameter associated to unit $j$ of the layer $l$, which is used to compute unit $i$ of the layer $(l+1)$. Note that in this example, there are 3 matrices of parameters to estimate : $\left(\Theta^{1}\right)$, $\left(\Theta^{2}\right)$ and $\left(\Theta^{3}\right)$. It implies $5*3 + 5*5 + 4*5 = 15 + 25 + 20 = 60$ parameters to estimate. In general, there are $(L-1)$ matrices of parameters to estimate. 
+Finally, the i-th row of matrix $W^{[l]}$ corresponds to the weights used to compute the i-th activation unit of layer $l$.
+
+We also introduce the bias vectors $b^{[l]}$ of layer $l$:
+
+$b^{[l]} \in \mathbb{R}^{n_h^{[l]}}$
+
+There is one weight for each activation unit of layer $l$.
 
 \subsection{Hypothesis}
 
-The hypothesis can be written recursively as follows:
+The hypothesis can be computed recursively as follows:
 
 \begin{align*}
-& X_1 = \text{the data matrix} \in \mathbb{R}^{m * (s_1+1)} \\
-& \\
-& X_{l+1} = 1_{m*1} \: \| \: g(X_{l}{\Theta^{(l)}}^{\top})  \in \mathbb{R}^{m * \left((s_{l+1})+1)\right)} \\
-& \\
-& h_{\Theta}(X_{1}) = g(X_{L-1}{\Theta^{(L-1)}}^{\top})  \in \mathbb{R}^{m * s_{L}} \\
-& \\
-& \text{where } \| \text{ means horizontal concatenation and } g \text{ is the sigmoid function applied element-wise}.
+& A^{[1]} = g^{[1]}\left( W^{[1]} * X + b^{[1]} \right) \in n_h^{[l]} \times m \\
+& \text{where } g^{[l]}(.) \text{ denotes the activation function for layer } l \text{ applied element-wise} \\
+& \text{and where } b^{[1]}  \text{ is broadcasted to be } n_h^{[l]} \times m \\
+& \hat{Y} = A^{[L]} = g^{[L]}\left( W^{[L]} * A^{[L-1]} + b^{[L-1]} \right) \in n_y \times m \\
 \end{align*}
 
 Again, the hypothesis only gives the probability that an observation belongs to each class. As for the one vs. all multi-class classification problem, we then introduce the following decision rule to pick the most probable class given the input features:
 
 \begin{equation}
-\text{Class of } y = index_{of}\left( max_{row \: wise}(h_{\Theta}(X_{1})) \right) \in \mathbb{R}^{m}
+\text{Class of } y^{(i)} = index_{of}\left( max(\hat{y^{(i)}}) \right) \in \mathbb{N}
 \end{equation}
+
+\subsection{Choices of the activation functions}
+
+Here are the different functions used as activation functions i.e. as functions that are applied to the linear combinations of the activation units of the previous layer and the weights.
+
+\begin{center}
+\begin{tabular}{ | c | c | }
+ \hline \\
+ \makecell{Sigmoid function \\
+ $ \frac{1}{1+e^{-x}}$
+ }
+ & \makecell{Hyperbolic tangent function (tanh) \\
+ $ \frac{e^{x} - e^{-x}}{e^{x} + e^{-x}}$
+ } \\ 
+ \hline
+\makecell{Rectified Linear Unit (ReLU) \\
+$ max(0, x)$
+} & \makecell{Leaky ReLU \\
+$max(0.001x, x)$
+} \\
+\hline
+\end{tabular}
+\end{center}
+
+In practice, here are some tips and notes:
+
+\begin{itemize}
+\item Never use the sigmoid function except for the output layer if it is a binary classification problem ;
+\item The standard is to used the RELU function for all units.
+\item The disadvantage of the RELU function is that it is not differentiable at 0 so if for a given example, $z^{(i)[l]}$ is equal to 0, it can mess up but it is very seldom.
+\item The disadvantage of the sigmoid function is that its derivative is close to 0 on large range of its domain so it slows down gradient descent.
+\end{itemize}
 
 \subsection{Cost function}
 
-Very similar to the cost function for the logistic regression, we just add a cost for the estimation of each output unit (now there are K of them). We also directly introduce the regularization term. Here is an unvectorized expression of the cost function:
+Very similar to the cost function for the logistic regression, we just add a cost for the estimation of the probability of each of the K class for each example. We can first write it in a non-vectorized way: 
 
-\begin{equation}
+\begin{align*}
 \begin{split}
-J(\Theta) = -\frac{1}{m} * \sum_{i=1}^{m} \sum_{k=1}^{K} y_{k}^{(i)} * ln({h_{\Theta}(X_{1})}_{i,k}) + (1-y_{k}^{(i)}) * ln(1-{h_{\Theta}(X_{1})}_{i,k}) \\
-+ \frac{\lambda}{2m} * \sum_{l=1}^{L-1} \sum_{i=1}^{s_{(l+1)}} \sum_{j=2}^{(s_{l})+1} {\Theta^{(l)}_{i,j}}^{2}
+J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]}) = -\frac{1}{m} * \sum_{i=1}^{m} \sum_{k=1}^{K} y_{k}^{(i)} * ln(a_{k}^{[2](i)}) + (1-y_{k}^{(i)}) * ln(1-a_{k}^{[2](i)}) \\
++ \frac{\lambda}{2m} * \sum_{l=1}^{L} \sum_{i=1}^{n_h^{[l]}} \sum_{j=1}^{n_h^{[l-1]}} {W^{[l]}_{i,j}}^{2}
 \end{split}
-\end{equation}
+& \\
+&\text{where } a_{k}^{[2](i)} \text{ is the predicted probability that example i belongs to class k} \\
+\begin{split}
+\text{and } W^{[l]}_{i,j} \text{ is the weight associated to the i-th hidden unit of layer [l]} \\
+\text{and the j-th activation unit of previous layer}
+\end{split}
+\end{align*}
 
 It can be vectorized as follows:
 
-\begin{align*}
-& J(\Theta) = -\frac{1}{m}  * \left[ \; Tr \left(ln(h_{\Theta}(X_{1}))Y^{\top}\right) + Tr\left(ln(1-h_{\Theta}(X_{1}))(1-Y)^{\top} \right) \; \right] \\
-& + \frac{\lambda}{2m}*\sum_{l=1}^{L-1}Tr\left({\Theta_{r}^{(l)}}^{\top}\Theta_{r}^{(l)}\right) \\
-& \text{where } \Theta_{r}^{(l)} = \Theta^{(l)} \text{ without the first column of }\theta_0s, \\
-& \text{and }  h_{\Theta}(X_{1}) \in \mathbb{R}^{m*K} \text{ and } Y \in \mathbb{R}^{m*K}, \\
-& \text{and } Tr(.) \text{ is the trace of a square matrix operator i.e. the sum of its diagonal}, \\
-& \text{ln(.) is applied element-wise}. 
-\end{align*}
+\begin{equation}
+\begin{split}
+J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]})  = -\frac{1}{m} * np.sum \left[ Y .* ln(A^{[2]}) + (1-Y) .* ln(1 - A^{[2]}) \right] \\
++ \frac{\lambda}{2m} * np.sum \left( \sum_{l=1}^{L} W^{[l]} .* W^{[l]} \right)
+\end{split}
+\end{equation}
 
 \subsection{Backpropagation algorithm}
 
-In order to minimize the cost function, we need to compute the partial derivatives of $J(\Theta)$ with respect to all the parameters i.e. with respect to each element of the $(L-1)$ matrices of parameters:
+In order to minimize the cost function, we need to compute the partial derivatives of $J(W^{[1]}, b^{[1]}, ..., W^{[L]}, b^{[L]})$ with respect to all the parameters i.e. with respect to each element of the $L$ matrices of weights and to each element of the $L$ vectors of bias:
 
 \begin{equation}
-\frac{\partial J(\Theta)}{\partial \Theta_{i, j}^{(l)}} \text{ for } i, \: j, \: l
+\forall l, \; \frac{\partial J}{\partial W^{[l]}} \text{ and } \frac{\partial J}{\partial b^{[l]}}
 \end{equation}
 
-To do so, we can use the backpropagation algorithm. This algorithm will yields the partial derivatives of $J(\Theta)$ with respect to each element of the matrices of parameters. 
+To do so, we can use the backpropagation algorithm. It basically applies the chain rule to go back the computational graph of $A^{[L]}$.
+
+\subsection{Synthesis}
+
+Here is a summary of the steps to implement a neural network.
 
 \begin{itemize}
-\item Step 1: Initialization. Set the matrices of parameters to random small values.
-\item Step 2: Compute forward the activation of the units of each intermediate layer as well as the hypothesis i.e. the output units with matrices of zeroes.
-\item Step 3: Compute the error of the last layer.
-\item Step 4: Compute backward the errors of all previous layers until the first intermediate layer.
-\item Step 5: Use the errors of each layer to compute the gradients of each matrix of parameters.
+\item Choose the number of hidden layers $[L-1]$ ;
+\item Choose the number of hidden units $n^{[l]}_h$ in each hidden layer ;
+\item Choose the activation functions $g^{[l]}$ at each layer: use the sigmoid function for the output layer if it is a binary classification problem. Otherwise, use the RELU function everywhere. If it is a regression problem, you can use an identity activation function at the output layer ;
+\item Randomly initialize the parameters $W^{[l]}$ between small negative and small positive values such as $0.001 * -2$ and $0.001 * 2$ to break up symmetry. It is useful to have small initial weights if the derivatives of the activation functions are locally small for large values of their input (it is the case for tanh, not for RELU).
+\item You can initialize the bias vectors $b^{[l]}$ at zeros vectors because symmetry is already broken by the random initialization of the matrices of weights ;
+\item Choose the learning rate $\alpha$ ;
+\item Repeat $N$ times the following steps: (1) forward propagation to compute each activate unit $A^{[l]}$ as well as the local value of the cost function $J$; (2) backward propagation to compute the derivatives of $J$ ; (3) update the parameters subtracting $\alpha$ times the derivative ; (4) restart.
+\item Plot the evolution of $J$ every $N_{i}$ iterations for instance every $1 000$ iterations to check $J$ converged.
 \end{itemize}
 
-
-On the full sample, the errors can be computed as follows:
-
-\begin{align*}
-& \delta^{(L)} = A^{(L)} - Y^{(L)} \in \mathbb{R}^{m\times s_{L}} \\
-& \delta^{(l)} =  \delta^{(l+1)} \Theta^{(l)} \: .* A^{(l)} .* (1-A^{(l)}) \in \mathbb{R}^{m\times (s_{l}+1)} \\
-& \text{where } A^{(l)} = 1_{m*1} \: \| \: g(\Theta^{(l-1)}X_{l-1}^{\top}) 
-\end{align*}
-
-Finally, we can obtain the gradients as follows:
-
-\begin{align*}
-& \Delta^{(l)} = \frac{1}{m} * {\delta^{(l+1)}}^{\top}A^{(l)}  + \frac{\lambda}{m} * \Theta_{r}^{(l)} \\
-& \text{where } \Theta_{r}^{(l)} = \begin{pmatrix} 0 \\ 0 \\ ... \\ 0 \end{pmatrix} \: \| \: \left[\Theta^{(l)}\right]_{col 2-end}
-\end{align*}
-
-Note that for $l=1$, we have $A^{1}=X$.
 
 \section{Support Vector Machines}
 
@@ -518,10 +550,77 @@ Here is a graph of $cost_0$ and $cost_1$ on $[-2,2]$ with $k=2$:
   \label{fig:hinge}
 \end{center}
 
+\subsection{Projections}
+
+Let be $E$ a vector space of dimension $n$. Let $F$ be a vector subspace  and $G$ a supplementary vector subspace to $F$ in $E$. As a reminder:
+
+\begin{equation}
+F \oplus G = E \iff F \cup G = E \text{ and } F \cap G = \{0\}
+\end{equation}
+
+Note that if $dim(F)<n$, then there is an infinite number of supplementary vector subspaces to $F$ in $E$. To get this point, consider the example of $\mathbb{R}^{2}$:
+
+\begin{align*}
+& F = Vect((1,1)) \\
+& G_1 = Vect((2,1)) \text{ and } G_2 = Vect((0, 2)) \\
+& G_1 \text{ and } G_2 \text{ are both supplementary subspaces to F for instance.}
+\end{align*}
+
+Given that $G$ is supplementary to $F$, we know that:
+
+\begin{equation}
+\forall x \in E, \exists! (a, b) \in F \times G \text{ such that } x = a +B
+\end{equation}
+
+We can define $p$ the linear application that gives the part $a$ of the decomposition of $x$. $p$ is a projection. Let focus on a special kind of projections called orthogonal projections. To do so, we will focus on the euclidean space $\mathbb{R}^{n}$ and we will take $F=Vect(y)$ where $y \in \mathbb{R}^{n}$. Now we will consider the supplementary vector subspace to $F$ that is orthogonal to it and we call it $G$. It is a vector subspace that verifies:
+
+\begin{align*}
+& \forall x \in G, <x, y> = 0 \\
+& \text{ where } <. \: , .> \text{ is the scalar product operator} \\ 
+& \text{i.e. } x^{\top}y = 0
+\end{align*}
+
+We can write that:
+
+\begin{align*}
+& \forall x \in \mathbb{R}^{n}, x = p(x) + x - p(x) \\
+& \\
+& \text{ where } p(x) \in Vect(y) \text{ and } x - p(x) \in G \\
+& \\
+& \text{ thus } \exists! k \in \mathbb{R}, p(x) = ky \text{ and } <x-p(x), y> = 0 \\
+& \\
+& \text{ replacing } p(x) \text{ in the second equation yields} \\
+& \\
+& k = \frac{<x, y>}{||y||^{2}} \\
+& \\
+& \text{ i.e. } p(x) = \frac{<x, y>}{||y||^{2}} * y \\
+& \\
+& \text{ where } ||x|| = \sqrt[2]{\sum_{i=1}^{m} x_{i}^{2}}
+\end{align*}
 
 \subsection{Large margin intuition}
  
-When ...
+Let go back to the SVM cost function. Assume that C is massively large, so much as we set the first term of the sum in the cost function $J(\theta)$ to be null. The minimization problem becomes:
 
+\begin{align*}
+& \min_{\theta} \theta^{\top}\theta \text{ subject to the constraints that } \\
+& \\
+& \text{ if } y^{i} = 1, {x^{(i)}}^{\top}\theta >= 1 \iff ||p(x)||*||\theta|| >= 1 \text{ based on previous section}
+& \\
+& \text{ if } y^{i} = 0, {x^{(i)}}^{\top}\theta <= -1 \iff  -||p(x)||*||\theta|| <= -1 \text{ based on previous section}
+\end{align*} 
 
+For the constraints to hold true, we need the length of the projections of both the positive and negative examples $x^{(i)}$ to be as large as possible. In other words, with a big C, minimizing the cost function is tantamount to finding the line spanned by $Vect(\theta)$ such that the orthogonal projections of both the positives examples and the negative examples on this line are the largest possible.
+
+\section{Appendix}
+
+aaa
+
+\subsection{F-score}
+
+aaa
+
+\subsection{Vectorization tips}
+
+aaa
 \end{document}
